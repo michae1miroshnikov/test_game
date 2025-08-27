@@ -31,6 +31,8 @@
 		491F7A5A2E5F1E8500C6A6BD /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 491F7A592E5F1E8500C6A6BD /* FirebaseStorage */; };
 		491F7A5C2E5F1E8500C6A6BD /* FirebaseStorageCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = 491F7A5B2E5F1E8500C6A6BD /* FirebaseStorageCombine-Community */; };
 		491F7A5F2E5F1EA100C6A6BD /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 491F7A5E2E5F1EA100C6A6BD /* Lottie */; };
+		497F30192E5F3E23002122EC /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 497F30182E5F3E23002122EC /* GoogleSignIn */; };
+		497F301B2E5F3E23002122EC /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 497F301A2E5F3E23002122EC /* GoogleSignInSwift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -55,6 +57,7 @@
 				491F7A562E5F1E8500C6A6BD /* FirebasePerformance in Frameworks */,
 				491F7A5C2E5F1E8500C6A6BD /* FirebaseStorageCombine-Community in Frameworks */,
 				491F7A582E5F1E8500C6A6BD /* FirebaseRemoteConfig in Frameworks */,
+				497F301B2E5F3E23002122EC /* GoogleSignInSwift in Frameworks */,
 				491F7A362E5F1E8500C6A6BD /* FirebaseAnalyticsIdentitySupport in Frameworks */,
 				491F7A322E5F1E8500C6A6BD /* FirebaseAnalytics in Frameworks */,
 				491F7A342E5F1E8500C6A6BD /* FirebaseAnalyticsCore in Frameworks */,
@@ -65,6 +68,7 @@
 				491F7A502E5F1E8500C6A6BD /* FirebaseInstallations in Frameworks */,
 				491F7A4C2E5F1E8500C6A6BD /* FirebaseFunctionsCombine-Community in Frameworks */,
 				491F7A3C2E5F1E8500C6A6BD /* FirebaseAuth in Frameworks */,
+				497F30192E5F3E23002122EC /* GoogleSignIn in Frameworks */,
 				491F7A3A2E5F1E8500C6A6BD /* FirebaseAppDistribution-Beta in Frameworks */,
 				491F7A4E2E5F1E8500C6A6BD /* FirebaseInAppMessaging-Beta in Frameworks */,
 				491F7A422E5F1E8500C6A6BD /* FirebaseCrashlytics in Frameworks */,
@@ -140,6 +144,8 @@
 				491F7A592E5F1E8500C6A6BD /* FirebaseStorage */,
 				491F7A5B2E5F1E8500C6A6BD /* FirebaseStorageCombine-Community */,
 				491F7A5E2E5F1EA100C6A6BD /* Lottie */,
+				497F30182E5F3E23002122EC /* GoogleSignIn */,
+				497F301A2E5F3E23002122EC /* GoogleSignInSwift */,
 			);
 			productName = test_game;
 			productReference = 491F7A052E5F1BA600C6A6BD /* test_game.app */;
@@ -172,6 +178,7 @@
 			packageReferences = (
 				491F7A2E2E5F1E8500C6A6BD /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				491F7A5D2E5F1EA100C6A6BD /* XCRemoteSwiftPackageReference "lottie-ios" */,
+				497F30172E5F3E23002122EC /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 491F7A062E5F1BA600C6A6BD /* Products */;
@@ -335,6 +342,7 @@
 				DEVELOPMENT_TEAM = QMD8BLY8VV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "test-game-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -367,6 +375,7 @@
 				DEVELOPMENT_TEAM = QMD8BLY8VV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "test-game-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -427,6 +436,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 4.5.2;
+			};
+		};
+		497F30172E5F3E23002122EC /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -551,6 +568,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 491F7A5D2E5F1EA100C6A6BD /* XCRemoteSwiftPackageReference "lottie-ios" */;
 			productName = Lottie;
+		};
+		497F30182E5F3E23002122EC /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 497F30172E5F3E23002122EC /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		497F301A2E5F3E23002122EC /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 497F30172E5F3E23002122EC /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

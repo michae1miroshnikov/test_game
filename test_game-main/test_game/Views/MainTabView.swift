@@ -8,19 +8,19 @@ struct MainTabView: View {
             GameView(authViewModel: authViewModel)
                 .tabItem {
                     Image(systemName: "gamecontroller.fill")
-                    Text("Игра")
+                    Text("Game")
                 }
             
             RatingView()
                 .tabItem {
                     Image(systemName: "list.number")
-                    Text("Рейтинг")
+                    Text("Rating")
                 }
             
             SettingsView(authViewModel: authViewModel)
                 .tabItem {
                     Image(systemName: "gearshape.fill")
-                    Text("Настройки")
+                    Text("Settings")
                 }
         }
         .accentColor(.gold)

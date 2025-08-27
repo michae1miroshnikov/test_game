@@ -6,7 +6,7 @@ struct BetStepperView: View {
     
     var body: some View {
         HStack {
-            Text("СТАВКА")
+            Text("BET")
                 .font(.headline)
                 .foregroundColor(.white)
                 .frame(width: 80, alignment: .leading)
@@ -43,7 +43,7 @@ struct BetStepperView: View {
             
             Spacer()
             
-            Button("ОЧИСТИТЬ") {
+            Button("CLEAR") {
                 gameViewModel.clearAllBets()
             }
             .font(.caption)
@@ -66,12 +66,12 @@ struct PlacedBetsView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("РАЗМЕЩЕННЫЕ СТАВКИ")
+            Text("PLACED BETS")
                 .font(.headline)
                 .foregroundColor(.white)
             
             if gameViewModel.placedBets.isEmpty {
-                Text("Нет размещенных ставок")
+                Text("No placed bets")
                     .foregroundColor(.gray)
                     .italic()
             } else {
@@ -84,7 +84,7 @@ struct PlacedBetsView: View {
                 }
                 
                 HStack {
-                    Text("Общая ставка:")
+                    Text("Total bet:")
                         .foregroundColor(.white)
                     Spacer()
                     Text("\(gameViewModel.totalBetAmount)")
@@ -114,7 +114,7 @@ struct PlacedBetRow: View {
                     .foregroundColor(.white)
                 
                 if !bet.numbers.isEmpty {
-                    Text("Числа: \(bet.numbers.map(String.init).joined(separator: ", "))")
+                    Text("Numbers: \(bet.numbers.map(String.init).joined(separator: ", "))")
                         .font(.caption2)
                         .foregroundColor(.gray)
                 }
@@ -128,7 +128,7 @@ struct PlacedBetRow: View {
                     .fontWeight(.bold)
                     .foregroundColor(.gold)
                 
-                Text("Выигрыш: \(bet.payout)")
+                Text("Payout: \(bet.payout)")
                     .font(.caption2)
                     .foregroundColor(.green)
             }
@@ -150,9 +150,11 @@ struct PlacedBetRow: View {
 struct SpinButtonView: View {
     @ObservedObject var gameViewModel: GameViewModel
     @ObservedObject var authViewModel: AuthViewModel
+    @Binding var showingSpinLoading: Bool
     
     var body: some View {
         Button(action: {
+            showingSpinLoading = true
             Task {
                 await gameViewModel.spinWheel()
             }
@@ -160,7 +162,7 @@ struct SpinButtonView: View {
             HStack {
                 Image(systemName: "play.fill")
                     .font(.title2)
-                Text("КРУТИТЬ")
+                Text("SPIN")
                     .font(.title2)
                     .fontWeight(.bold)
             }
@@ -188,7 +190,7 @@ struct GameResultView: View {
         VStack(spacing: 20) {
             // Результат
             VStack(spacing: 10) {
-                Text("РЕЗУЛЬТАТ")
+                Text("RESULT")
                     .font(.title)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
@@ -204,18 +206,18 @@ struct GameResultView: View {
             // Выигрыш
             if result.isWin {
                 VStack(spacing: 8) {
-                    Text("ПОЗДРАВЛЯЕМ!")
+                    Text("CONGRATULATIONS!")
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.green)
                     
-                    Text("Выигрыш: \(result.totalWinnings)")
+                    Text("Winnings: \(result.totalWinnings)")
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(.gold)
                 }
             } else {
-                Text("Попробуйте еще раз!")
+                Text("Try again!")
                     .font(.title2)
                     .foregroundColor(.orange)
             }
@@ -223,7 +225,7 @@ struct GameResultView: View {
             // Выигрышные ставки
             if !result.winningBets.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Выигрышные ставки:")
+                    Text("Winning bets:")
                         .font(.headline)
                         .foregroundColor(.white)
                     
@@ -246,7 +248,7 @@ struct GameResultView: View {
             
             // Кнопка новой игры
             Button(action: onNewGame) {
-                Text("НОВАЯ ИГРА")
+                Text("NEW GAME")
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
@@ -267,7 +269,7 @@ struct GameResultView: View {
     VStack(spacing: 20) {
         BetStepperView(gameViewModel: GameViewModel())
         PlacedBetsView(gameViewModel: GameViewModel())
-        SpinButtonView(gameViewModel: GameViewModel(), authViewModel: AuthViewModel())
+        SpinButtonView(gameViewModel: GameViewModel(), authViewModel: AuthViewModel(), showingSpinLoading: .constant(false))
     }
     .background(Color.black)
 }

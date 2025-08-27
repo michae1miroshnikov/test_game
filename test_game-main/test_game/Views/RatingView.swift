@@ -21,7 +21,7 @@ struct RatingView: View {
                 
                 VStack {
                     if ratingViewModel.isLoading {
-                        ProgressView("Загрузка рейтинга...")
+                        ProgressView("Loading rating...")
                             .foregroundColor(.white)
                     } else {
                         ScrollView {
@@ -39,7 +39,7 @@ struct RatingView: View {
                     }
                 }
             }
-            .navigationTitle("Рейтинг")
+            .navigationTitle("Rating")
             .navigationBarTitleDisplayMode(.inline)
         }
         .onAppear {
@@ -88,13 +88,13 @@ struct PlayerRatingRow: View {
                         .foregroundColor(.white)
                     
                     if isCurrentUser {
-                        Text("(Вы)")
+                        Text("(You)")
                             .font(.caption)
                             .foregroundColor(.gold)
                     }
                 }
                 
-                Text("Фишки: \(player.chips)")
+                Text("Chips: \(player.chips)")
                     .font(.subheadline)
                     .foregroundColor(.gold)
             }
@@ -179,7 +179,7 @@ class RatingViewModel: ObservableObject {
             }
             
         } catch {
-            errorMessage = "Ошибка загрузки рейтинга: \(error.localizedDescription)"
+            errorMessage = "Error loading rating: \(error.localizedDescription)"
         }
         
         isLoading = false

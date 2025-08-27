@@ -1,8 +1,8 @@
 import SwiftUI
+import Lottie
 
 struct LoadingView: View {
     @State private var isAnimating = false
-    @State private var rotationAngle: Double = 0
     
     var body: some View {
         ZStack {
@@ -18,34 +18,19 @@ struct LoadingView: View {
             .ignoresSafeArea()
             
             VStack(spacing: 30) {
-                // Простое анимированное колесо
-                ZStack {
-                    // Внешний круг
-                    Circle()
-                        .stroke(Color.gold, lineWidth: 8)
-                        .frame(width: 120, height: 120)
-                        .rotationEffect(.degrees(rotationAngle))
-                    
-                    // Внутренний круг
-                    Circle()
-                        .fill(Color.black)
-                        .frame(width: 100, height: 100)
-                    
-                    // Центральная точка
-                    Circle()
-                        .fill(Color.gold)
-                        .frame(width: 20, height: 20)
-                        .scaleEffect(isAnimating ? 1.2 : 1.0)
-                }
+                // Lottie анимация
+                LottieView(name: "Casino Roulette")
+                    .frame(width: 200, height: 200)
+                    .scaleEffect(isAnimating ? 1.1 : 1.0)
                 
                 // Текст загрузки
                 VStack(spacing: 10) {
-                    Text("РУЛЕТКА")
+                    Text("ROULETTE")
                         .font(.system(size: 32, weight: .bold, design: .rounded))
                         .foregroundColor(.gold)
                         .scaleEffect(isAnimating ? 1.1 : 1.0)
                     
-                    Text("Загрузка...")
+                    Text("Loading...")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundColor(.white.opacity(0.8))
                 }
@@ -68,17 +53,37 @@ struct LoadingView: View {
             }
         }
         .onAppear {
-            startAnimations()
+            isAnimating = true
         }
+    }
+}
+
+// MARK: - Lottie View
+struct LottieView: UIViewRepresentable {
+    let name: String
+    
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        let animationView = LottieAnimationView()
+        animationView.animation = LottieAnimation.named(name)
+        animationView.contentMode = .scaleAspectFit
+        animationView.loopMode = .loop
+        animationView.play()
+        
+        animationView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(animationView)
+        
+        NSLayoutConstraint.activate([
+            animationView.topAnchor.constraint(equalTo: view.topAnchor),
+            animationView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            animationView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            animationView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        
+        return view
     }
     
-    private func startAnimations() {
-        isAnimating = true
-        
-        withAnimation(Animation.linear(duration: 2).repeatForever(autoreverses: false)) {
-            rotationAngle = 360
-        }
-    }
+    func updateUIView(_ uiView: UIView, context: Context) {}
 }
 
 // Расширение для золотого цвета

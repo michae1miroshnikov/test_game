@@ -3,6 +3,7 @@ import SwiftUI
 struct GameView: View {
     @StateObject private var gameViewModel = GameViewModel()
     @ObservedObject var authViewModel: AuthViewModel
+    @State private var showingSpinLoading = false
     
     var body: some View {
         NavigationView {
@@ -41,13 +42,13 @@ struct GameView: View {
                             PlacedBetsView(gameViewModel: gameViewModel)
                             
                             // Кнопка спина
-                            SpinButtonView(gameViewModel: gameViewModel, authViewModel: authViewModel)
+                            SpinButtonView(gameViewModel: gameViewModel, authViewModel: authViewModel, showingSpinLoading: $showingSpinLoading)
                         }
                         .padding()
                     }
                 }
             }
-            .navigationTitle("Рулетка")
+            .navigationTitle("Roulette")
             .navigationBarTitleDisplayMode(.inline)
             .overlay(
                 // Результат игры
@@ -59,6 +60,23 @@ struct GameView: View {
                         GameResultView(result: result) {
                             gameViewModel.startNewGame()
                         }
+                    }
+                }
+            )
+            .overlay(
+                // Loading при спинне
+                Group {
+                    if showingSpinLoading {
+                        Color.black.opacity(0.8)
+                            .ignoresSafeArea()
+                        
+                        LoadingView()
+                            .onAppear {
+                                // Показываем LoadingView на 3 секунды во время спинна
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                    showingSpinLoading = false
+                                }
+                            }
                     }
                 }
             )
@@ -97,7 +115,7 @@ struct UserHeaderView: View {
             
             // Имя пользователя
             VStack(alignment: .leading) {
-                Text(user?.username ?? "Гость")
+                Text(user?.username ?? "Guest")
                     .font(.headline)
                     .foregroundColor(.white)
             }

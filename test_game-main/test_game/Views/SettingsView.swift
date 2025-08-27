@@ -28,7 +28,7 @@ struct SettingsView: View {
                     // Настройки
                     VStack(spacing: 16) {
                         SettingsButton(
-                            title: "ОЦЕНИТЬ ПРИЛОЖЕНИЕ",
+                            title: "RATE APP",
                             icon: "star.fill",
                             color: .yellow
                         ) {
@@ -36,7 +36,7 @@ struct SettingsView: View {
                         }
                         
                         SettingsButton(
-                            title: "ПОДЕЛИТЬСЯ ИГРОЙ",
+                            title: "SHARE GAME",
                             icon: "square.and.arrow.up",
                             color: .blue
                         ) {
@@ -44,7 +44,7 @@ struct SettingsView: View {
                         }
                         
                         SettingsButton(
-                            title: "ВЫЙТИ",
+                            title: "SIGN OUT",
                             icon: "rectangle.portrait.and.arrow.right",
                             color: .orange
                         ) {
@@ -52,7 +52,7 @@ struct SettingsView: View {
                         }
                         
                         SettingsButton(
-                            title: "УДАЛИТЬ АККАУНТ",
+                            title: "DELETE ACCOUNT",
                             icon: "trash.fill",
                             color: .red
                         ) {
@@ -67,18 +67,18 @@ struct SettingsView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Настройки")
+            .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
-            .alert("Удалить аккаунт?", isPresented: $showingDeleteAlert) {
-                Button("Отмена", role: .cancel) { }
-                Button("Удалить", role: .destructive) {
+            .alert("Delete account?", isPresented: $showingDeleteAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete", role: .destructive) {
                     deleteAccount()
                 }
             } message: {
-                Text("Это действие нельзя отменить. Все данные будут удалены навсегда.")
+                Text("This action cannot be undone. All data will be permanently deleted.")
             }
             .sheet(isPresented: $showingShareSheet) {
-                ShareSheet(activityItems: ["Попробуйте эту увлекательную игру рулетки! 🎰"])
+                ShareSheet(activityItems: ["Try this exciting roulette game! 🎰"])
             }
         }
     }
@@ -96,7 +96,7 @@ struct SettingsView: View {
         
         user.delete { error in
             if let error = error {
-                print("Ошибка удаления аккаунта: \(error.localizedDescription)")
+                print("Error deleting account: \(error.localizedDescription)")
             } else {
                 authViewModel.signOut()
             }
@@ -121,7 +121,7 @@ struct UserProfileCard: View {
             
             // Информация о пользователе
             VStack(spacing: 8) {
-                Text(user?.username ?? "Гость")
+                Text(user?.username ?? "Guest")
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
@@ -132,7 +132,7 @@ struct UserProfileCard: View {
                             .font(.title3)
                             .fontWeight(.bold)
                             .foregroundColor(.gold)
-                        Text("Фишки")
+                        Text("Chips")
                             .font(.caption)
                             .foregroundColor(.gray)
                     }
