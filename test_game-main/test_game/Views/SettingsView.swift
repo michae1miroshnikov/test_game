@@ -4,8 +4,10 @@ import FirebaseAuth
 
 struct SettingsView: View {
     @ObservedObject var authViewModel: AuthViewModel
+    @StateObject private var audioManager = AudioManager.shared
     @State private var showingDeleteAlert = false
     @State private var showingShareSheet = false
+    @State private var hasChanges = false
     
     var body: some View {
         NavigationView {
@@ -41,6 +43,20 @@ struct SettingsView: View {
                             color: .blue
                         ) {
                             showingShareSheet = true
+                        }
+                        
+                        // Музыка
+                        HStack {
+                            SettingsButton(
+                                title: "MUSIC",
+                                icon: audioManager.isMusicEnabled ? "speaker.wave.2.fill" : "speaker.slash.fill",
+                                color: audioManager.isMusicEnabled ? .green : .gray
+                            ) {
+                                audioManager.toggleMusic()
+                                hasChanges = true
+                            }
+                            
+                            Spacer()
                         }
                         
                         SettingsButton(
@@ -80,6 +96,13 @@ struct SettingsView: View {
             .sheet(isPresented: $showingShareSheet) {
                 ShareSheet(activityItems: ["Try this exciting roulette game! 🎰"])
             }
+            .alert("Settings Changed", isPresented: $hasChanges) {
+                Button("OK") {
+                    hasChanges = false
+                }
+            } message: {
+                Text("Your settings have been updated.")
+            }
         }
     }
     
@@ -88,7 +111,11 @@ struct SettingsView: View {
             return
         }
         
-        SKStoreReviewController.requestReview(in: scene)
+        if #available(iOS 18.0, *) {
+            AppStore.requestReview(in: scene)
+        } else {
+            SKStoreReviewController.requestReview(in: scene)
+        }
     }
     
     private func deleteAccount() {
@@ -138,7 +165,7 @@ struct UserProfileCard: View {
                     }
                     
                     VStack {
-                        Text("\(Int((user?.winRate ?? 0) * 100))%")
+                        Text("\(Int(user?.winRate ?? 100))%")
                             .font(.title3)
                             .fontWeight(.bold)
                             .foregroundColor(.green)

@@ -107,7 +107,7 @@ struct PlayerRatingRow: View {
                     .font(.caption)
                     .foregroundColor(.gray)
                 
-                Text("\(Int(player.winRate * 100))%")
+                Text("\(Int(player.winRate))%")
                     .font(.headline)
                     .fontWeight(.bold)
                     .foregroundColor(winRateColor)
@@ -134,9 +134,9 @@ struct PlayerRatingRow: View {
     }
     
     private var winRateColor: Color {
-        if player.winRate >= 0.6 {
+        if player.winRate >= 60 {
             return .green
-        } else if player.winRate >= 0.4 {
+        } else if player.winRate >= 40 {
             return .yellow
         } else {
             return .red

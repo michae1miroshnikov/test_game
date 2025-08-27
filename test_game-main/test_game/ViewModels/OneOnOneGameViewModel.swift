@@ -2,24 +2,23 @@ import Foundation
 import Combine
 
 @MainActor
-class GameViewModel: ObservableObject {
+class OneOnOneGameViewModel: ObservableObject {
     @Published var currentBet: Int = 10
     @Published var placedBets: [Bet] = []
     @Published var gameState: GameState = .betting
     @Published var winningNumber: Int?
-    @Published var gameResult: GameResult?
     @Published var totalBetAmount: Int = 0
-    @Published var totalWinnings: Int = 0
     @Published var isSpinning = false
-    @Published var errorMessage: String?
+    
+    // 1 на 1 специфичные свойства
+    @Published var opponent: User?
+    @Published var playerScore: Int = 0
+    @Published var opponentScore: Int = 0
+    @Published var gameResult: OneOnOneGameResult?
     
     private let rouletteNumbers = Array(0...36).map { RouletteNumber($0) }
     private var cancellables = Set<AnyCancellable>()
-    private weak var authViewModel: AuthViewModel?
-    
-    func setAuthViewModel(_ authViewModel: AuthViewModel) {
-        self.authViewModel = authViewModel
-    }
+    private var botTimer: Timer?
     
     // Европейская рулетка - числа в порядке на колесе
     private let wheelOrder = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26]
@@ -32,6 +31,50 @@ class GameViewModel: ObservableObject {
         return max(1, currentBet / 10)
     }
     
+    func createBotOpponent() {
+        opponent = User(
+            id: "bot_\(UUID().uuidString)",
+            username: "Bot",
+            chips: Int.max, // Бесконечные фишки для бота
+            winRate: Double.random(in: 30...70)
+        )
+        print("Bot opponent created")
+        startBotGame()
+    }
+    
+    private func startBotGame() {
+        print("Starting bot game")
+        // Бот делает ставки каждые 3-7 секунд независимо от игрока
+        botTimer = Timer.scheduledTimer(withTimeInterval: Double.random(in: 3...7), repeats: true) { _ in
+            Task { @MainActor in
+                self.makeBotBet()
+            }
+        }
+    }
+    
+    private func makeBotBet() {
+        // Бот случайно выбирает тип ставки
+        let betTypes: [BetType] = [.red, .black, .odd, .even, .low, .high, .straightUp]
+        let randomBetType = betTypes.randomElement() ?? .red
+        
+        // Бот делает случайную ставку от 10 до 200
+        let botBetAmount = Int.random(in: 10...200)
+        
+        var numbers: [Int] = []
+        switch randomBetType {
+        case .straightUp:
+            numbers = [Int.random(in: 0...36)]
+        case .red, .black, .odd, .even, .low, .high:
+            numbers = []
+        default:
+            numbers = []
+        }
+        
+        // Создаем ставку бота и добавляем к его счету
+        let botBet = Bet(type: randomBetType, numbers: numbers, amount: botBetAmount)
+        print("Bot placed bet: \(botBet.type.rawValue) for \(botBet.amount)")
+    }
+    
     func increaseBet() {
         currentBet += betStep
     }
@@ -40,29 +83,10 @@ class GameViewModel: ObservableObject {
         currentBet = max(1, currentBet - betStep)
     }
     
-    func setBetAmount(_ amount: Int) {
-        currentBet = max(1, amount)
-    }
-    
     func placeBet(type: BetType, numbers: [Int]) {
-        // Проверяем, что у пользователя достаточно фишек
-        guard let user = authViewModel?.currentUser else { 
-            errorMessage = "User not found"
-            return 
-        }
-        
-        // Проверяем, что общая сумма ставок не превышает баланс
-        let newTotalBet = totalBetAmount + currentBet
-        if newTotalBet > user.chips {
-            // Показываем ошибку - недостаточно фишек
-            errorMessage = "Not enough chips! You have: \(user.chips), trying to bet: \(newTotalBet)"
-            return
-        }
-        
         let bet = Bet(type: type, numbers: numbers, amount: currentBet)
         placedBets.append(bet)
         updateTotalBetAmount()
-        errorMessage = nil // Очищаем ошибку при успешной ставке
     }
     
     func removeBet(_ bet: Bet) {
@@ -92,28 +116,40 @@ class GameViewModel: ObservableObject {
         let randomIndex = Int.random(in: 0..<wheelOrder.count)
         winningNumber = wheelOrder[randomIndex]
         
-        // Определение выигрышных ставок
+        // Определение выигрышных ставок игрока
         let winningBets = calculateWinningBets()
         let totalWinnings = winningBets.reduce(0) { $0 + $1.payout }
         
-        gameResult = GameResult(
-            winningNumber: winningNumber!,
-            winningBets: winningBets,
-            totalWinnings: totalWinnings,
-            isWin: !winningBets.isEmpty
-        )
+        // Обновляем счет игрока (как в обычной игре)
+        if totalWinnings > 0 {
+            // Игрок выиграл - добавляем выигрыш
+            playerScore += totalWinnings
+        } else {
+            // Игрок проиграл - вычитаем ставку
+            playerScore -= totalBetAmount
+        }
         
-        self.totalWinnings = totalWinnings
+        // Бот делает случайную ставку и получает результат
+        let botBetAmount = Int.random(in: 10...200)
+        let botBetType = [BetType.red, .black, .odd, .even, .low, .high].randomElement() ?? .red
+        
+        // Симулируем результат бота
+        let botWinningChance = Double.random(in: 0...1)
+        if botWinningChance > 0.5 { // 50% шанс выигрыша для бота (более сбалансированно)
+            // Бот выиграл
+            let botWinnings = botBetAmount * botBetType.payout
+            opponentScore += botWinnings
+            print("Bot won: \(botWinnings) with bet \(botBetAmount) on \(botBetType.rawValue)")
+        } else {
+            // Бот проиграл
+            opponentScore -= botBetAmount
+            print("Bot lost: -\(botBetAmount) with bet on \(botBetType.rawValue)")
+        }
+        
+        print("Player score: \(playerScore), Opponent score: \(opponentScore)")
+        
         gameState = .result
         isSpinning = false
-        
-        // Проверяем, нужно ли дать дополнительные фишки
-        checkAndGiveBonusChips()
-    }
-    
-    private func checkAndGiveBonusChips() {
-        // Если у пользователя 0 фишек, даем 100 для продолжения игры
-        // Это будет обработано в GameView после обновления баланса
     }
     
     private func calculateWinningBets() -> [Bet] {
@@ -180,13 +216,32 @@ class GameViewModel: ObservableObject {
         return corners
     }
     
+    func endGame() {
+        botTimer?.invalidate()
+        botTimer = nil
+        
+        // Определяем победителя
+        let isPlayerWinner = playerScore > opponentScore
+        let totalPot = abs(playerScore) + abs(opponentScore)
+        
+        print("Game ended! Player: \(playerScore), Opponent: \(opponentScore), Winner: \(isPlayerWinner ? "Player" : "Opponent")")
+        
+        gameResult = OneOnOneGameResult(
+            playerScore: playerScore,
+            opponentScore: opponentScore,
+            isPlayerWinner: isPlayerWinner,
+            totalPot: totalPot
+        )
+    }
+    
     func startNewGame() {
         gameState = .betting
         placedBets.removeAll()
         winningNumber = nil
         gameResult = nil
+        playerScore = 0
+        opponentScore = 0
         totalBetAmount = 0
-        totalWinnings = 0
     }
     
     // Вспомогательные методы для создания ставок
@@ -215,5 +270,23 @@ class GameViewModel: ObservableObject {
     
     func placeEvenMoneyBet(type: BetType) {
         placeBet(type: type, numbers: [])
+    }
+}
+
+// MARK: - One On One Game Result
+struct OneOnOneGameResult {
+    let playerScore: Int
+    let opponentScore: Int
+    let isPlayerWinner: Bool
+    let totalPot: Int
+    
+    var winner: String {
+        if isPlayerWinner {
+            return "You"
+        } else if playerScore == opponentScore {
+            return "Tie"
+        } else {
+            return "Opponent"
+        }
     }
 }

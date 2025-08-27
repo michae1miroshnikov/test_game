@@ -8,11 +8,13 @@
 import SwiftUI
 import FirebaseCore
 import GoogleSignIn
+import AVFoundation
 
 @main
 struct test_gameApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var authViewModel = AuthViewModel()
+    @StateObject private var audioManager = AudioManager.shared
     
     init() {
         FirebaseApp.configure()
@@ -33,6 +35,14 @@ struct test_gameApp: App {
                 print("Error restoring Google Sign-In: \(error)")
             }
         }
+        
+        // Настройка аудио сессии
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("Failed to set up audio session: \(error)")
+        }
     }
     
     var body: some Scene {
@@ -40,8 +50,14 @@ struct test_gameApp: App {
             if authViewModel.isAuthenticated {
                 MainTabView()
                     .environmentObject(authViewModel)
+                    .onAppear {
+                        audioManager.playMusic()
+                    }
             } else {
                 AuthView(authViewModel: authViewModel)
+                    .onAppear {
+                        audioManager.playMusic()
+                    }
             }
         }
     }

@@ -3,6 +3,8 @@ import SwiftUI
 // MARK: - Bet Stepper View
 struct BetStepperView: View {
     @ObservedObject var gameViewModel: GameViewModel
+    @State private var showingCustomBet = false
+    @State private var customBetAmount = ""
     
     var body: some View {
         HStack {
@@ -22,12 +24,17 @@ struct BetStepperView: View {
                         .background(Color.red)
                 }
                 
-                Text("\(gameViewModel.currentBet)")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                    .frame(width: 80, height: 44)
-                    .background(Color.black)
+                Button(action: {
+                    customBetAmount = "\(gameViewModel.currentBet)"
+                    showingCustomBet = true
+                }) {
+                    Text("\(gameViewModel.currentBet)")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .frame(width: 80, height: 44)
+                        .background(Color.black)
+                }
                 
                 Button(action: {
                     gameViewModel.increaseBet()
@@ -57,6 +64,19 @@ struct BetStepperView: View {
         .padding()
         .background(Color.black.opacity(0.3))
         .cornerRadius(12)
+        .alert("Custom Bet Amount", isPresented: $showingCustomBet) {
+            TextField("Enter amount", text: $customBetAmount)
+                .keyboardType(.numberPad)
+            
+            Button("Cancel", role: .cancel) { }
+            Button("Set") {
+                if let amount = Int(customBetAmount), amount > 0 {
+                    gameViewModel.setBetAmount(amount)
+                }
+            }
+        } message: {
+            Text("Enter your bet amount:")
+        }
     }
 }
 

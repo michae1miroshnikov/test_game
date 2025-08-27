@@ -20,7 +20,7 @@ class AuthViewModel: ObservableObject {
     }
     
     private func setupAuthStateListener() {
-        Auth.auth().addStateDidChangeListener { [weak self] _, user in
+        _ = Auth.auth().addStateDidChangeListener { [weak self] _, user in
             Task { @MainActor in
                 if let user = user {
                     await self?.fetchUserData(userId: user.uid)
@@ -91,6 +91,8 @@ class AuthViewModel: ObservableObject {
         } catch {
             errorMessage = "Google sign in error: \(error.localizedDescription)"
             print("Google Sign-In Error: \(error)")
+            // При ошибке (включая отмену) не меняем состояние аутентификации
+            // Loading view автоматически скроется через onChange
         }
         
         isLoading = false
@@ -112,6 +114,9 @@ class AuthViewModel: ObservableObject {
             "username": user.username,
             "chips": user.chips,
             "winRate": user.winRate,
+            "totalGames": user.totalGames,
+            "totalWins": user.totalWins,
+            "bonusChipsAvailable": user.bonusChipsAvailable,
             "createdAt": Timestamp(date: user.createdAt)
         ]
         
@@ -127,7 +132,10 @@ class AuthViewModel: ObservableObject {
                     id: data["id"] as? String ?? userId,
                     username: data["username"] as? String ?? "Unknown",
                     chips: data["chips"] as? Int ?? 2000,
-                    winRate: data["winRate"] as? Double ?? 0.0
+                    winRate: data["winRate"] as? Double ?? 0.0,
+                    totalGames: data["totalGames"] as? Int ?? 0,
+                    totalWins: data["totalWins"] as? Int ?? 0,
+                    bonusChipsAvailable: data["bonusChipsAvailable"] as? Bool ?? true
                 )
                 currentUser = user
                 isAuthenticated = true
@@ -176,6 +184,48 @@ class AuthViewModel: ObservableObject {
             currentUser?.winRate = newWinRate
         } catch {
             errorMessage = "Error updating statistics: \(error.localizedDescription)"
+        }
+    }
+    
+    func updateBonusChipsAvailable(_ available: Bool) async {
+        guard let userId = currentUser?.id else { return }
+        
+        do {
+            try await db.collection("users").document(userId).updateData([
+                "bonusChipsAvailable": available
+            ])
+            
+            currentUser?.bonusChipsAvailable = available
+        } catch {
+            errorMessage = "Error updating bonus chips availability: \(error.localizedDescription)"
+        }
+    }
+    
+    func updateTotalGames(_ totalGames: Int) async {
+        guard let userId = currentUser?.id else { return }
+        
+        do {
+            try await db.collection("users").document(userId).updateData([
+                "totalGames": totalGames
+            ])
+            
+            currentUser?.totalGames = totalGames
+        } catch {
+            errorMessage = "Error updating total games: \(error.localizedDescription)"
+        }
+    }
+    
+    func updateTotalWins(_ totalWins: Int) async {
+        guard let userId = currentUser?.id else { return }
+        
+        do {
+            try await db.collection("users").document(userId).updateData([
+                "totalWins": totalWins
+            ])
+            
+            currentUser?.totalWins = totalWins
+        } catch {
+            errorMessage = "Error updating total wins: \(error.localizedDescription)"
         }
     }
     

@@ -4,6 +4,8 @@ struct GameView: View {
     @StateObject private var gameViewModel = GameViewModel()
     @ObservedObject var authViewModel: AuthViewModel
     @State private var showingSpinLoading = false
+    @State private var showingBonusAlert = false
+    @State private var showingNoBonusAlert = false
     
     var body: some View {
         NavigationView {
@@ -43,6 +45,17 @@ struct GameView: View {
                             
                             // Кнопка спина
                             SpinButtonView(gameViewModel: gameViewModel, authViewModel: authViewModel, showingSpinLoading: $showingSpinLoading)
+                            
+                            // Отображение ошибок
+                            if let errorMessage = gameViewModel.errorMessage {
+                                Text(errorMessage)
+                                    .foregroundColor(.red)
+                                    .font(.caption)
+                                    .multilineTextAlignment(.center)
+                                    .padding()
+                                    .background(Color.red.opacity(0.1))
+                                    .cornerRadius(8)
+                            }
                         }
                         .padding()
                     }
@@ -81,20 +94,100 @@ struct GameView: View {
                 }
             )
         }
+        .onAppear {
+            gameViewModel.setAuthViewModel(authViewModel)
+        }
         .onReceive(gameViewModel.$gameResult) { result in
             if let result = result {
                 handleGameResult(result)
             }
+        }
+        .alert("Bonus Chips!", isPresented: $showingBonusAlert) {
+            Button("OK") { }
+        } message: {
+            Text("You received 100 bonus chips to continue playing!")
+        }
+        .alert("No Bonus Available", isPresented: $showingNoBonusAlert) {
+            Button("OK") { }
+        } message: {
+            Text("You have already used your bonus chips. Please add chips to continue playing.")
         }
     }
     
     private func handleGameResult(_ result: GameResult) {
         Task {
             if let user = authViewModel.currentUser {
-                let newChips = user.chips - gameViewModel.totalBetAmount + result.totalWinnings
-                await authViewModel.updateUserChips(newChips)
+                // Если выиграли, добавляем выигрыш к балансу
+                // Если проиграли, вычитаем ставку из баланса
+                let newChips: Int
+                if result.isWin {
+                    // Выигрыш: добавляем выигрыш к текущему балансу
+                    newChips = user.chips + result.totalWinnings
+                } else {
+                    // Проигрыш: вычитаем ставку из текущего баланса
+                    newChips = user.chips - gameViewModel.totalBetAmount
+                }
+                
+                // Если у пользователя 0 или отрицательный баланс
+                let finalChips: Int
+                if newChips <= 0 {
+                    // Проверяем, можно ли дать бонусные фишки
+                    if user.bonusChipsAvailable {
+                        finalChips = 100
+                        await authViewModel.updateBonusChipsAvailable(false)
+                        // Показываем уведомление о бонусных фишках
+                        await showBonusChipsAlert()
+                    } else {
+                        finalChips = 0
+                        // Показываем предупреждение, что бонусные фишки уже использованы
+                        await showNoBonusChipsAlert()
+                    }
+                } else {
+                    finalChips = newChips
+                }
+                
+                await authViewModel.updateUserChips(finalChips)
+                
+                // Обновляем win rate
+                await updateWinRate(isWin: result.isWin)
             }
         }
+    }
+    
+    private func showBonusChipsAlert() async {
+        // Показываем алерт о бонусных фишках
+        await MainActor.run {
+            showingBonusAlert = true
+            print("Showing bonus alert")
+        }
+    }
+    
+    private func showNoBonusChipsAlert() async {
+        // Показываем алерт о том, что бонусные фишки уже использованы
+        await MainActor.run {
+            showingNoBonusAlert = true
+            print("Showing no bonus alert")
+        }
+    }
+    
+    private func updateWinRate(isWin: Bool) async {
+        guard let user = authViewModel.currentUser else { return }
+        
+        // Получаем текущую статистику из Firebase
+        let totalGames = user.totalGames
+        let totalWins = user.totalWins
+        
+        // Обновляем статистику
+        let newTotalGames = totalGames + 1
+        let newTotalWins = totalWins + (isWin ? 1 : 0)
+        
+        // Рассчитываем win rate в процентах
+        let newWinRate = newTotalGames > 0 ? (Double(newTotalWins) / Double(newTotalGames)) * 100.0 : 100.0
+        
+        // Сохраняем в Firebase
+        await authViewModel.updateWinRate(newWinRate)
+        await authViewModel.updateTotalGames(newTotalGames)
+        await authViewModel.updateTotalWins(newTotalWins)
     }
 }
 
@@ -191,7 +284,7 @@ struct RouletteWheelView: View {
                 }
             }
         }
-        .onChange(of: isSpinning) { spinning in
+        .onChange(of: isSpinning) { _, spinning in
             if spinning {
                 withAnimation(.linear(duration: 3)) {
                     rotationAngle += 720

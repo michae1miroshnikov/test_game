@@ -137,8 +137,13 @@ struct AuthView: View {
                 }
             }
         )
-        .onChange(of: authViewModel.isAuthenticated) { isAuthenticated in
+        .onChange(of: authViewModel.isAuthenticated) { _, isAuthenticated in
             if isAuthenticated {
+                showingLoading = false
+            }
+        }
+        .onChange(of: authViewModel.isLoading) { _, isLoading in
+            if !isLoading {
                 showingLoading = false
             }
         }
