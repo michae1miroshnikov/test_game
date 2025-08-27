@@ -49,6 +49,19 @@ struct GameView: View {
             }
             .navigationTitle("Рулетка")
             .navigationBarTitleDisplayMode(.inline)
+            .overlay(
+                // Результат игры
+                Group {
+                    if let result = gameViewModel.gameResult {
+                        Color.black.opacity(0.8)
+                            .ignoresSafeArea()
+                        
+                        GameResultView(result: result) {
+                            gameViewModel.startNewGame()
+                        }
+                    }
+                }
+            )
         }
         .onReceive(gameViewModel.$gameResult) { result in
             if let result = result {

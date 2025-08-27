@@ -18,7 +18,7 @@ struct LoadingView: View {
             .ignoresSafeArea()
             
             VStack(spacing: 30) {
-                // Анимированное колесо рулетки
+                // Простое анимированное колесо
                 ZStack {
                     // Внешний круг
                     Circle()
@@ -28,32 +28,14 @@ struct LoadingView: View {
                     
                     // Внутренний круг
                     Circle()
-                        .fill(Color.gold.opacity(0.3))
+                        .fill(Color.black)
                         .frame(width: 100, height: 100)
-                        .rotationEffect(.degrees(-rotationAngle * 0.5))
                     
                     // Центральная точка
                     Circle()
                         .fill(Color.gold)
                         .frame(width: 20, height: 20)
                         .scaleEffect(isAnimating ? 1.2 : 1.0)
-                    
-                    // Точки по кругу
-                    ForEach(0..<8, id: \.self) { index in
-                        Circle()
-                            .fill(Color.red)
-                            .frame(width: 8, height: 8)
-                            .offset(y: -50)
-                            .rotationEffect(.degrees(Double(index) * 45))
-                    }
-                    
-                    ForEach(8..<16, id: \.self) { index in
-                        Circle()
-                            .fill(Color.black)
-                            .frame(width: 8, height: 8)
-                            .offset(y: -50)
-                            .rotationEffect(.degrees(Double(index) * 45))
-                    }
                 }
                 
                 // Текст загрузки
@@ -68,7 +50,7 @@ struct LoadingView: View {
                         .foregroundColor(.white.opacity(0.8))
                 }
                 
-                // Анимированные точки
+                // Простые анимированные точки
                 HStack(spacing: 8) {
                     ForEach(0..<3, id: \.self) { index in
                         Circle()
@@ -93,7 +75,7 @@ struct LoadingView: View {
     private func startAnimations() {
         isAnimating = true
         
-        withAnimation(Animation.linear(duration: 3).repeatForever(autoreverses: false)) {
+        withAnimation(Animation.linear(duration: 2).repeatForever(autoreverses: false)) {
             rotationAngle = 360
         }
     }
