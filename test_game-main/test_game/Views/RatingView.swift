@@ -53,7 +53,7 @@ struct RatingView: View {
 // MARK: - Player Rating Row
 struct PlayerRatingRow: View {
     let rank: Int
-    let player: User
+    let player: RatingPlayer
     let isCurrentUser: Bool
     
     var body: some View {
@@ -107,7 +107,7 @@ struct PlayerRatingRow: View {
                     .font(.caption)
                     .foregroundColor(.gray)
                 
-                Text("\(Int(player.winRate))%")
+                Text(String(format: "%.1f%%", player.winRate))
                     .font(.headline)
                     .fontWeight(.bold)
                     .foregroundColor(winRateColor)
@@ -144,10 +144,18 @@ struct PlayerRatingRow: View {
     }
 }
 
+// MARK: - Rating Player
+struct RatingPlayer: Identifiable {
+    let id: String
+    let username: String
+    let chips: Int
+    let winRate: Double
+}
+
 // MARK: - Rating ViewModel
 @MainActor
 class RatingViewModel: ObservableObject {
-    @Published var players: [User] = []
+    @Published var players: [RatingPlayer] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
     
@@ -165,11 +173,28 @@ class RatingViewModel: ObservableObject {
             
             players = snapshot.documents.compactMap { document in
                 let data = document.data()
-                return User(
+                let totalGames = data["totalGames"] as? Int ?? 0
+                let totalWins = data["totalWins"] as? Int ?? 0
+                let storedWinRate = data["winRate"] as? Double ?? 0.0
+                
+                // Используем сохраненный win rate или рассчитываем из статистики
+                let winRate: Double
+                if storedWinRate > 0 {
+                    winRate = storedWinRate // Используем сохраненный win rate
+                } else if totalGames > 0 {
+                    winRate = (Double(totalWins) / Double(totalGames)) * 100.0
+                } else {
+                    winRate = 0.0 // По умолчанию 0% для новых пользователей
+                }
+                
+                print("User \(data["username"] ?? "Unknown"): Total games: \(totalGames), Total wins: \(totalWins), Calculated win rate: \(winRate)%, Stored win rate: \(storedWinRate)%")
+                print("Raw data: \(data)")
+                
+                return RatingPlayer(
                     id: data["id"] as? String ?? document.documentID,
                     username: data["username"] as? String ?? "Unknown",
                     chips: data["chips"] as? Int ?? 0,
-                    winRate: data["winRate"] as? Double ?? 0.0
+                    winRate: winRate
                 )
             }
             

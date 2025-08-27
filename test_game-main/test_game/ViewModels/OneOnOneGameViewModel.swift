@@ -16,6 +16,9 @@ class OneOnOneGameViewModel: ObservableObject {
     @Published var opponentScore: Int = 0
     @Published var gameResult: OneOnOneGameResult?
     
+    weak var authViewModel: AuthViewModel?
+    var onGameStarted: (() -> Void)?
+    
     private let rouletteNumbers = Array(0...36).map { RouletteNumber($0) }
     private var cancellables = Set<AnyCancellable>()
     private var botTimer: Timer?
@@ -38,12 +41,16 @@ class OneOnOneGameViewModel: ObservableObject {
             chips: Int.max, // Бесконечные фишки для бота
             winRate: Double.random(in: 30...70)
         )
-        print("Bot opponent created")
+        print("Bot opponent created - game is now active")
+        gameState = .betting // Устанавливаем состояние в betting
         startBotGame()
     }
     
     private func startBotGame() {
         print("Starting bot game")
+        // Останавливаем предыдущий таймер если есть
+        botTimer?.invalidate()
+        
         // Бот делает ставки каждые 3-7 секунд независимо от игрока
         botTimer = Timer.scheduledTimer(withTimeInterval: Double.random(in: 3...7), repeats: true) { _ in
             Task { @MainActor in
@@ -73,6 +80,19 @@ class OneOnOneGameViewModel: ObservableObject {
         // Создаем ставку бота и добавляем к его счету
         let botBet = Bet(type: randomBetType, numbers: numbers, amount: botBetAmount)
         print("Bot placed bet: \(botBet.type.rawValue) for \(botBet.amount)")
+        
+        // Обновляем счет бота
+        let botWinningChance = Double.random(in: 0...1)
+        if botWinningChance > 0.5 {
+            // Бот выиграл
+            let botWinnings = botBetAmount * randomBetType.payout
+            opponentScore += botWinnings
+            print("Bot won: \(botWinnings) with bet \(botBetAmount) on \(randomBetType.rawValue)")
+        } else {
+            // Бот проиграл
+            opponentScore -= botBetAmount
+            print("Bot lost: -\(botBetAmount) with bet on \(randomBetType.rawValue)")
+        }
     }
     
     func increaseBet() {
@@ -108,6 +128,9 @@ class OneOnOneGameViewModel: ObservableObject {
         
         gameState = .spinning
         isSpinning = true
+        
+        // Запускаем таймер игры когда игрок делает ставку
+        onGameStarted?()
         
         // Анимация вращения (симуляция)
         try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 секунды
@@ -235,6 +258,11 @@ class OneOnOneGameViewModel: ObservableObject {
     }
     
     func startNewGame() {
+        // Останавливаем бота
+        botTimer?.invalidate()
+        botTimer = nil
+        
+        // Сбрасываем состояние
         gameState = .betting
         placedBets.removeAll()
         winningNumber = nil
@@ -242,6 +270,14 @@ class OneOnOneGameViewModel: ObservableObject {
         playerScore = 0
         opponentScore = 0
         totalBetAmount = 0
+        isSpinning = false
+        opponent = nil
+        
+        print("Game reset - opponent removed, switching tabs allowed")
+    }
+    
+    func isGameActive() -> Bool {
+        return opponent != nil || gameState == .spinning
     }
     
     // Вспомогательные методы для создания ставок
@@ -271,6 +307,8 @@ class OneOnOneGameViewModel: ObservableObject {
     func placeEvenMoneyBet(type: BetType) {
         placeBet(type: type, numbers: [])
     }
+    
+
 }
 
 // MARK: - One On One Game Result

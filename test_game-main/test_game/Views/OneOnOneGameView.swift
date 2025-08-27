@@ -101,6 +101,9 @@ struct OneOnOneGameView: View {
             )
         }
         .onAppear {
+            // Передаем AuthViewModel в GameViewModel
+            gameViewModel.authViewModel = authViewModel
+            
             if !hasStartedFirstGame {
                 startSearchingForOpponent()
                 hasStartedFirstGame = true
@@ -153,11 +156,16 @@ struct OneOnOneGameView: View {
     }
     
     private func startNewGame() {
+        // Останавливаем старые таймеры
+        gameTimer?.invalidate()
+        gameTimer = nil
+        
         // Сбрасываем игру
         gameViewModel.startNewGame()
         timeRemaining = 60
         showingLoading = false
         showingSpinLoading = false
+        hasStartedFirstGame = false // Сбрасываем флаг для новой игры
         
         // Начинаем новую игру
         startSearchingForOpponent()
